@@ -53,7 +53,7 @@ export default function RegisterOnboarding() {
     } else if (stepId === currentStep) {
       stateStr = 'Current';
     }
-    return `/images/State=${stateStr}, Step Type=${stepKey}.svg`;
+    return `./images/State=${stateStr}, Step Type=${stepKey}.svg`;
   };
 
   return (
@@ -103,7 +103,7 @@ export default function RegisterOnboarding() {
                   <span className="custom-radio">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
-                  <div className="flag-icon"><img src="/images/TR.svg" alt="TR" /></div>
+                  <div className="flag-icon"><img src="./images/TR.svg" alt="TR" /></div>
                   <span className="lang-code">TR</span>
                 </label>
 
@@ -112,7 +112,7 @@ export default function RegisterOnboarding() {
                   <span className="custom-radio">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
-                  <div className="flag-icon"><img src="/images/GB.svg" alt="EN" /></div>
+                  <div className="flag-icon"><img src="./images/GB.svg" alt="EN" /></div>
                   <span className="lang-code">EN</span>
                 </label>
               </div>

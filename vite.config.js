@@ -33,6 +33,13 @@ export default defineConfig({
           }
           next();
         });
+      },
+      closeBundle() {
+        const srcDir = path.join(__dirname, 'images');
+        const distDir = path.join(__dirname, 'dist', 'images');
+        if (fs.existsSync(srcDir)) {
+          fs.cpSync(srcDir, distDir, { recursive: true });
+        }
       }
     }
   ],
