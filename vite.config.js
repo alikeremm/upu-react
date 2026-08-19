@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 
 export default defineConfig({
-  base: './',
+  base: '/upu-react/',
   plugins: [
     react(),
     {
@@ -40,6 +40,8 @@ export default defineConfig({
         if (fs.existsSync(srcDir)) {
           fs.cpSync(srcDir, distDir, { recursive: true });
         }
+        const noJekyllPath = path.join(__dirname, 'dist', '.nojekyll');
+        fs.writeFileSync(noJekyllPath, '');
       }
     }
   ],
