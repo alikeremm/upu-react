@@ -2,6 +2,52 @@ import React, { useState, useRef } from 'react';
 import { translations, stepsData } from './translations';
 import './register.css';
 
+import trFlag from '../images/TR.svg';
+import gbFlag from '../images/GB.svg';
+
+import step1Current from '../images/State=Current, Step Type=Language.svg';
+import step1Completed from '../images/State=Completed, Step Type=Language.svg';
+import step1Incomplete from '../images/State=Incomplete, Step Type=Language.svg';
+
+import step2Current from '../images/State=Current, Step Type=Company.svg';
+import step2Completed from '../images/State=Completed, Step Type=Company.svg';
+import step2Incomplete from '../images/State=Incomplete, Step Type=Company.svg';
+
+import step3Current from '../images/State=Current, Step Type=Department.svg';
+import step3Completed from '../images/State=Completed, Step Type=Department.svg';
+import step3Incomplete from '../images/State=Incomplete, Step Type=Department.svg';
+
+import step4Current from '../images/State=Current, Step Type=Personnel.svg';
+import step4Completed from '../images/State=Completed, Step Type=Personnel.svg';
+import step4Incomplete from '../images/State=Incomplete, Step Type=Personnel.svg';
+
+import step5Current from '../images/State=Current, Step Type=Internal Op..svg';
+import step5Completed from '../images/State=Completed, Step Type=Internal Op..svg';
+import step5Incomplete from '../images/State=Incomplete, Step Type=Internal Op..svg';
+
+import step6Current from '../images/State=Current, Step Type=External Op..svg';
+import step6Completed from '../images/State=Completed, Step Type=External Op..svg';
+import step6Incomplete from '../images/State=Incomplete, Step Type=External Op..svg';
+
+import step7Current from '../images/State=Current, Step Type=Equipments.svg';
+import step7Completed from '../images/State=Completed, Step Type=Equipments.svg';
+import step7Incomplete from '../images/State=Incomplete, Step Type=Equipments.svg';
+
+import step8Current from '../images/State=Current, Step Type=Shifts.svg';
+import step8Completed from '../images/State=Completed, Step Type=Shifts.svg';
+import step8Incomplete from '../images/State=Incomplete, Step Type=Shifts.svg';
+
+const stepImages = {
+  1: { Current: step1Current, Completed: step1Completed, Incomplete: step1Incomplete },
+  2: { Current: step2Current, Completed: step2Completed, Incomplete: step2Incomplete },
+  3: { Current: step3Current, Completed: step3Completed, Incomplete: step3Incomplete },
+  4: { Current: step4Current, Completed: step4Completed, Incomplete: step4Incomplete },
+  5: { Current: step5Current, Completed: step5Completed, Incomplete: step5Incomplete },
+  6: { Current: step6Current, Completed: step6Completed, Incomplete: step6Incomplete },
+  7: { Current: step7Current, Completed: step7Completed, Incomplete: step7Incomplete },
+  8: { Current: step8Current, Completed: step8Completed, Incomplete: step8Incomplete },
+};
+
 export default function RegisterOnboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [language, setLanguage] = useState('tr');
@@ -46,14 +92,14 @@ export default function RegisterOnboarding() {
     }
   };
 
-  const getStepSvg = (stepId, stepKey) => {
+  const getStepSvg = (stepId) => {
     let stateStr = 'Incomplete';
     if (stepId < currentStep) {
       stateStr = 'Completed';
     } else if (stepId === currentStep) {
       stateStr = 'Current';
     }
-    return `images/State=${stateStr}, Step Type=${stepKey}.svg`;
+    return stepImages[stepId][stateStr];
   };
 
   return (
@@ -70,7 +116,7 @@ export default function RegisterOnboarding() {
                 onClick={() => setCurrentStep(step.id)}
               >
                 <img
-                  src={getStepSvg(step.id, step.key)}
+                  src={getStepSvg(step.id)}
                   alt={step.alt}
                   className="step-figma-svg"
                 />
@@ -103,7 +149,7 @@ export default function RegisterOnboarding() {
                   <span className="custom-radio">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
-                  <div className="flag-icon"><img src="images/TR.svg" alt="TR" /></div>
+                  <div className="flag-icon"><img src={trFlag} alt="TR" /></div>
                   <span className="lang-code">TR</span>
                 </label>
 
@@ -112,7 +158,7 @@ export default function RegisterOnboarding() {
                   <span className="custom-radio">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
-                  <div className="flag-icon"><img src="images/GB.svg" alt="EN" /></div>
+                  <div className="flag-icon"><img src={gbFlag} alt="EN" /></div>
                   <span className="lang-code">EN</span>
                 </label>
               </div>
