@@ -6,7 +6,7 @@ export default function RegisterOnboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [language, setLanguage] = useState('tr');
 
-  const baseUrl = import.meta.env.BASE_URL;
+  const baseUrl = import.meta.env.BASE_URL || './';
 
   const [logoPreview, setLogoPreview] = useState(null);
   const fileInputRef = useRef(null);
@@ -55,7 +55,8 @@ export default function RegisterOnboarding() {
     } else if (stepId === currentStep) {
       stateStr = 'Current';
     }
-    return `${baseUrl}images/State=${stateStr}, Step Type=${stepKey}.svg`;
+    const path = `${baseUrl}images/State=${stateStr}, Step Type=${stepKey}.svg`;
+    return encodeURI(path);
   };
 
   return (
