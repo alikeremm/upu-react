@@ -43,6 +43,18 @@ export default defineConfig(({ mode }) => ({
         const noJekyllPath = path.join(__dirname, 'dist', '.nojekyll');
         fs.writeFileSync(noJekyllPath, '');
       }
+    },
+    {
+      name: 'html-transform-dev',
+      transformIndexHtml(html, ctx) {
+        if (ctx && ctx.server) {
+          return html.replace(
+            /<script\s+type="module"[^>]*src="[^"]*"[^>]*><\/script>/,
+            '<script type="module" src="/src/main.jsx"></script>'
+          );
+        }
+        return html;
+      }
     }
   ],
   server: {
