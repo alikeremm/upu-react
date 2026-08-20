@@ -42,18 +42,12 @@ export default defineConfig(({ mode }) => ({
         }
         const noJekyllPath = path.join(__dirname, 'dist', '.nojekyll');
         fs.writeFileSync(noJekyllPath, '');
-      }
-    },
-    {
-      name: 'html-transform-dev',
-      transformIndexHtml(html, ctx) {
-        if (ctx && ctx.server) {
-          return html.replace(
-            /<script\s+type="module"[^>]*src="[^"]*"[^>]*><\/script>/,
-            '<script type="module" src="/src/main.jsx"></script>'
-          );
+
+        const distIndex = path.join(__dirname, 'dist', 'index.html');
+        const dist404 = path.join(__dirname, 'dist', '404.html');
+        if (fs.existsSync(distIndex)) {
+          fs.copyFileSync(distIndex, dist404);
         }
-        return html;
       }
     }
   ],
