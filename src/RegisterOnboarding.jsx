@@ -167,6 +167,45 @@ export default function RegisterOnboarding() {
     name: '', address: '', countryCode: 'TR', phone: '', email: ''
   });
 
+  // STEP 7: Equipments State
+  const [equipmentsData, setEquipmentsData] = useState([]);
+  const [maxEquipmentCredit, setMaxEquipmentCredit] = useState(42);
+  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
+  const [editingEquipmentId, setEditingEquipmentId] = useState(null);
+  const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('');
+  const eqPhotoFileInputRef = useRef(null);
+  const [currentUploadedEqPhoto, setCurrentUploadedEqPhoto] = useState(null);
+  const [eqForm, setEqForm] = useState({
+    id: '', brand: '', model: '', type: '', mac: '', year: '',
+    amort: '', score: '', valuation: '', minCost: '',
+    workerCount: '', orderNo: '', lifespan: '', tolerance: '',
+    utilization: '12', measurable: '12', performance: '12', availability: '12'
+  });
+
+  // STEP 8: Shifts State
+  const [shiftsData, setShiftsData] = useState([]);
+  const [editingShiftId, setEditingShiftId] = useState(null);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [shiftModalTab, setShiftModalTab] = useState('info'); // 'info' | 'break'
+  const [shiftForm, setShiftForm] = useState({
+    name: '', startTime: '16:34', endTime: '16:34', manager: '', repeatDays: [], color: ''
+  });
+  const [currentShiftBreaks, setCurrentShiftBreaks] = useState([]);
+
+  // Sub-modal: Breaks
+  const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
+  const [editingBreakId, setEditingBreakId] = useState(null);
+  const [breakForm, setBreakForm] = useState({ name: '', startTime: '16:34', endTime: '16:34' });
+
+  const colorHexMap = {
+    'mor': '#7F56D9',
+    'gri': '#667085',
+    'kırmızı': '#D9381E',
+    'turuncu': '#F79009',
+    'yeşil': '#12B76A',
+    'mavi': '#2E90FA'
+  };
+
   const t = translations[language];
 
   useEffect(() => {
@@ -470,6 +509,168 @@ export default function RegisterOnboarding() {
   };
   const handleDeleteSupplier = (id) => setSuppliersData(prev => prev.filter(s => s.id !== id));
 
+  // ─── Step 7: Equipment Handlers ───
+  const handleOpenAddEquipmentModal = () => {
+    setEditingEquipmentId(null);
+    setCurrentUploadedEqPhoto(null);
+    setEqForm({
+      id: '', brand: '', model: '', type: 'CNC Torna', mac: '', year: '',
+      amort: '', score: '', valuation: '', minCost: '',
+      workerCount: '', orderNo: '', lifespan: '', tolerance: '',
+      utilization: '12', measurable: '12', performance: '12', availability: '12'
+    });
+    setIsEquipmentModalOpen(true);
+  };
+
+  const handleOpenEditEquipmentModal = (eq) => {
+    setEditingEquipmentId(eq.id);
+    setCurrentUploadedEqPhoto(eq.img || eq.photo || null);
+    setEqForm({
+      id: eq.id || '',
+      brand: eq.brand || eq.name || '',
+      model: eq.model || '',
+      type: eq.type || 'CNC Torna',
+      mac: eq.mac || '',
+      year: eq.year || '',
+      amort: eq.amort || '',
+      score: eq.score || '',
+      valuation: eq.valuation || '',
+      minCost: eq.minCost || '',
+      workerCount: eq.workerCount || '',
+      orderNo: eq.orderNo || '',
+      lifespan: eq.lifespan || '',
+      tolerance: eq.tolerance || '',
+      utilization: eq.utilization || '12',
+      measurable: eq.measurable || '12',
+      performance: eq.performance || '12',
+      availability: eq.availability || '12'
+    });
+    setIsEquipmentModalOpen(true);
+  };
+
+  const handleEqPhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => setCurrentUploadedEqPhoto(event.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveEquipment = () => {
+    const brand = eqForm.brand.trim();
+    const model = eqForm.model.trim();
+    const finalName = brand && model ? `${brand} ${model}` : (brand || model || 'Yeni Ekipman');
+    const finalType = eqForm.type || 'CNC Torna';
+
+    const eqObj = {
+      name: finalName,
+      brand,
+      model,
+      type: finalType,
+      img: currentUploadedEqPhoto || null,
+      photo: currentUploadedEqPhoto || null,
+      ...eqForm
+    };
+
+    if (editingEquipmentId) {
+      setEquipmentsData(prev => prev.map(e => e.id === editingEquipmentId ? { ...e, ...eqObj } : e));
+    } else {
+      setEquipmentsData(prev => [...prev, { id: Date.now(), ...eqObj }]);
+    }
+    setIsEquipmentModalOpen(false);
+  };
+
+  const handleDeleteEquipment = (id) => setEquipmentsData(prev => prev.filter(e => e.id !== id));
+
+  const filteredDefinedEquipments = equipmentsData.filter(e => {
+    const q = equipmentSearchQuery.toLowerCase();
+    return e.name.toLowerCase().includes(q) || (e.type && e.type.toLowerCase().includes(q));
+  });
+
+  const isEquipmentLimitReached = equipmentsData.length >= maxEquipmentCredit;
+
+  // ─── Step 8: Shift Handlers ───
+  const handleOpenAddShiftModal = () => {
+    if (shiftsData.length >= 3) return;
+    setEditingShiftId(null);
+    setShiftForm({ name: '', startTime: '16:34', endTime: '16:34', manager: '', repeatDays: [], color: '' });
+    setCurrentShiftBreaks([]);
+    setShiftModalTab('info');
+    setIsShiftModalOpen(true);
+  };
+
+  const handleOpenEditShiftModal = (shift) => {
+    setEditingShiftId(shift.id);
+    setShiftForm({
+      name: shift.name || '',
+      startTime: shift.startTime || '16:34',
+      endTime: shift.endTime || '16:34',
+      manager: shift.manager || '',
+      repeatDays: shift.repeatDays || [],
+      color: shift.color || ''
+    });
+    setCurrentShiftBreaks(shift.breaks ? JSON.parse(JSON.stringify(shift.breaks)) : []);
+    setShiftModalTab('info');
+    setIsShiftModalOpen(true);
+  };
+
+  const handleToggleShiftRepeatDay = (day) => {
+    setShiftForm(prev => ({
+      ...prev,
+      repeatDays: prev.repeatDays.includes(day)
+        ? prev.repeatDays.filter(d => d !== day)
+        : [...prev.repeatDays, day]
+    }));
+  };
+
+  const handleSaveShift = () => {
+    const name = shiftForm.name.trim() || 'Yeni Vardiya';
+    const shiftObj = {
+      name,
+      startTime: shiftForm.startTime || '16:34',
+      endTime: shiftForm.endTime || '16:34',
+      manager: shiftForm.manager || '',
+      repeatDays: [...shiftForm.repeatDays],
+      color: shiftForm.color || '',
+      breaks: [...currentShiftBreaks]
+    };
+    if (editingShiftId) {
+      setShiftsData(prev => prev.map(s => s.id === editingShiftId ? { ...s, ...shiftObj } : s));
+    } else {
+      setShiftsData(prev => [...prev, { id: Date.now(), ...shiftObj }]);
+    }
+    setIsShiftModalOpen(false);
+  };
+
+  const handleDeleteShift = (id) => setShiftsData(prev => prev.filter(s => s.id !== id));
+
+  // Break Handlers (Submodal)
+  const handleOpenAddBreakModal = () => {
+    setEditingBreakId(null);
+    setBreakForm({ name: '', startTime: '16:34', endTime: '16:34' });
+    setIsBreakModalOpen(true);
+  };
+
+  const handleOpenEditBreakModal = (b) => {
+    setEditingBreakId(b.id);
+    setBreakForm({ name: b.name || '', startTime: b.startTime || '16:34', endTime: b.endTime || '16:34' });
+    setIsBreakModalOpen(true);
+  };
+
+  const handleSaveBreak = () => {
+    const name = breakForm.name.trim() || 'Yeni Mola';
+    const breakObj = { name, startTime: breakForm.startTime || '16:34', endTime: breakForm.endTime || '16:34' };
+    if (editingBreakId) {
+      setCurrentShiftBreaks(prev => prev.map(b => b.id === editingBreakId ? { ...b, ...breakObj } : b));
+    } else {
+      setCurrentShiftBreaks(prev => [...prev, { id: Date.now(), ...breakObj }]);
+    }
+    setIsBreakModalOpen(false);
+  };
+
+  const handleDeleteBreak = (id) => setCurrentShiftBreaks(prev => prev.filter(b => b.id !== id));
+
   // ─────────────────────────── RENDER ───────────────────────────
   return (
     <main className="onboarding-wrapper">
@@ -627,9 +828,13 @@ export default function RegisterOnboarding() {
                     {filteredDepartments.map((dept) => (
                       <div key={dept.id} className="dept-item-card" style={{ borderLeftColor: (dept.tags?.[0]?.color) || '#7C5CFC' }}>
                         <span className="dept-name-text">{dept.name}</span>
-                        <div className="dept-actions-btns">
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleOpenEditDeptModal(dept)}><EditIcon /></button>
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleDeleteDept(dept.id)}><DeleteIcon /></button>
+                        <div className="dept-item-actions">
+                          <button type="button" className="dept-action-btn edit-dept-btn" onClick={() => handleOpenEditDeptModal(dept)} title="Düzenle">
+                            <EditIcon />
+                          </button>
+                          <button type="button" className="dept-action-btn delete-btn" onClick={() => handleDeleteDept(dept.id)} title="Sil">
+                            <DeleteIcon />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -706,9 +911,13 @@ export default function RegisterOnboarding() {
                               <span className="person-sub-title">{displayRole}</span>
                             </div>
                           </div>
-                          <div className="dept-actions-btns">
-                            <button type="button" className="dept-action-icon-btn" onClick={() => handleOpenEditPersonModal(person)}><EditIcon /></button>
-                            <button type="button" className="dept-action-icon-btn" onClick={() => handleDeletePerson(person.id)}><DeleteIcon /></button>
+                          <div className="dept-item-actions">
+                            <button type="button" className="dept-action-btn edit-person-btn" onClick={() => handleOpenEditPersonModal(person)} title="Düzenle">
+                              <EditIcon />
+                            </button>
+                            <button type="button" className="dept-action-btn delete-person-btn" onClick={() => handleDeletePerson(person.id)} title="Sil">
+                              <DeleteIcon />
+                            </button>
                           </div>
                         </div>
                       );
@@ -759,24 +968,32 @@ export default function RegisterOnboarding() {
                   </div>
                   <div className="dept-items-list">
                     {filteredInternalOps.map((op) => (
-                      <div key={op.id} className="person-item-card">
-                        <div className="person-item-left">
-                          <div className="op-icon-wrapper">
-                            {op.src ? <img src={op.src} alt="Op Icon" /> : '⚙️'}
+                      <div key={op.id} className="dept-item-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', color: '#344054' }}>
+                            {op.src ? <img src={op.src} alt="Op Icon" style={{ width: '24px', height: '24px', objectFit: 'contain' }} /> : <span style={{ fontSize: '20px' }}>⚙️</span>}
                           </div>
-                          <div className="person-info-col">
-                            <span className="person-full-name">
+                          <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                            <span className="dept-name-text" style={{ display: 'flex', alignItems: 'center' }}>
                               {op.name}
-                              {op.code && <span className="op-code-badge">{op.code}</span>}
+                              {op.code && (
+                                <span style={{ background: '#F4F3FF', color: '#7C5CFC', fontSize: '12px', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', marginLeft: '8px' }}>
+                                  {op.code}
+                                </span>
+                              )}
                             </span>
-                            <span className="person-sub-title">
-                              {op.managers && op.managers.length > 0 ? op.managers.join(', ') : (op.type || 'İç Operasyon')}
+                            <span style={{ fontSize: '13px', color: '#667085', fontWeight: 400, marginTop: '2px' }}>
+                              {op.managers && op.managers.length > 0 ? op.managers.join(', ') : 'Henüz sorumlu atanmadı'}
                             </span>
                           </div>
                         </div>
-                        <div className="dept-actions-btns">
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleOpenEditInternalOpModal(op)}><EditIcon /></button>
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleDeleteInternalOp(op.id)}><DeleteIcon /></button>
+                        <div className="dept-item-actions">
+                          <button type="button" className="dept-action-btn edit-op-btn" onClick={() => handleOpenEditInternalOpModal(op)} title="Düzenle">
+                            <EditIcon />
+                          </button>
+                          <button type="button" className="dept-action-btn delete-op-btn" onClick={() => handleDeleteInternalOp(op.id)} title="Sil">
+                            <DeleteIcon />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -825,22 +1042,30 @@ export default function RegisterOnboarding() {
                     <input type="text" className="dept-search-input" placeholder={t.search_placeholder} value={externalOpSearchQuery} onChange={(e) => setExternalOpSearchQuery(e.target.value)} />
                   </div>
                   <div className="dept-items-list">
-                    {filteredExternalOps.map((op) => (
-                      <div key={op.id} className="person-item-card">
-                        <div className="person-item-left">
-                          <div className="person-info-col">
-                            <span className="person-full-name">{op.name}</span>
-                            <span className="person-sub-title">
-                              {op.suppliers && op.suppliers.length > 0 ? op.suppliers.join(', ') : 'Tedarikçi atanmadı'}
-                            </span>
+                    {filteredExternalOps.map((op) => {
+                      const supplierSubText = (op.suppliers && op.suppliers.length > 0) ? op.suppliers.join(', ') : '';
+                      return (
+                        <div key={op.id} className="dept-item-card">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '36px', height: '36px', minWidth: '36px', backgroundColor: '#F4F3FF', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7F56D9' }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                              <span className="dept-name-text">{op.name}</span>
+                              {supplierSubText && <span style={{ fontSize: '13px', color: '#667085', fontWeight: 400, marginTop: '2px' }}>{supplierSubText}</span>}
+                            </div>
+                          </div>
+                          <div className="dept-item-actions">
+                            <button type="button" className="dept-action-btn edit-ext-op-btn" onClick={() => handleOpenEditExternalOpModal(op)} title="Düzenle">
+                              <EditIcon />
+                            </button>
+                            <button type="button" className="dept-action-btn delete-ext-op-btn" onClick={() => handleDeleteExternalOp(op.id)} title="Sil">
+                              <DeleteIcon />
+                            </button>
                           </div>
                         </div>
-                        <div className="dept-actions-btns">
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleOpenEditExternalOpModal(op)}><EditIcon /></button>
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleDeleteExternalOp(op.id)}><DeleteIcon /></button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <button type="button" className="btn-add-new-dept" onClick={handleOpenAddExternalOpModal}>
                     <span className="plus-sign">+</span><span>{t.btn_add_new_external_op}</span>
@@ -854,14 +1079,314 @@ export default function RegisterOnboarding() {
             )}
           </div>
         )}
-        {/* ══════════ STEP 7: EKİPMANLAR (BOŞ ŞABLON) ══════════ */}
+        {/* ══════════ STEP 7: EKİPMAN EKLE (EQUIPMENTS) ══════════ */}
         {currentStep === 7 && (
-          <div className="step-view active" id="step-7"></div>
+          <div className="step-view active" id="step-7">
+            {equipmentsData.length === 0 ? (
+              <div className="internal-op-empty-view" id="equipmentsEmptyView">
+                <div className="welcome-header internal-op-header">
+                  <h1 className="step-title">{t.step7_title}</h1>
+                  <p className="welcome-subtitle">{t.step7_sub}</p>
+                </div>
+                <div className="add-internal-op-wrapper">
+                  <button type="button" className="btn-add-item" id="btnAddEquipment" onClick={handleOpenAddEquipmentModal}>
+                    <span className="plus-sign">+</span>
+                    <span>{t.btn_add}</span>
+                  </button>
+                </div>
+                <div className="form-action-buttons" style={{ marginTop: '40px' }}>
+                  <button type="button" className="btn-step-prev btn-prev" onClick={() => setCurrentStep(6)}>{t.btn_prev}</button>
+                  <button type="button" className="btn-step-next btn-next" onClick={() => setCurrentStep(8)}>{t.btn_next}</button>
+                </div>
+              </div>
+            ) : (
+              <div className="internal-op-list-view" id="equipmentsListView">
+                <div className="dept-card-container" style={{ maxWidth: '720px' }}>
+                  {/* Header */}
+                  <div className="dept-card-header" style={{ marginBottom: '16px' }}>
+                    <h2 className="dept-card-title">{t.equipments}</h2>
+                    <span
+                      className="dept-count-badge"
+                      style={{
+                        backgroundColor: isEquipmentLimitReached ? '#FEF3F2' : '#F4F3FF',
+                        color: isEquipmentLimitReached ? '#B42318' : '#7F56D9',
+                        fontWeight: 600,
+                        padding: '4px 12px',
+                        borderRadius: '12px',
+                        fontSize: '13px'
+                      }}
+                    >
+                      {equipmentsData.length} / {maxEquipmentCredit} {t.equipment_credit_count}
+                    </span>
+                  </div>
+
+                  {/* Search */}
+                  <div className="dept-search-wrapper" style={{ marginBottom: '16px' }}>
+                    <SearchIcon />
+                    <input
+                      type="text"
+                      className="dept-search-input"
+                      placeholder={t.search_placeholder}
+                      value={equipmentSearchQuery}
+                      onChange={(e) => setEquipmentSearchQuery(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Tabs Row: Tanımsız Ekipmanlar & Tanımlı Ekipmanlar */}
+                  <div className="equipment-list-tabs" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #EAECF0', paddingBottom: '12px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#344054' }}>
+                      <span>{t.undefined_equipments}</span>
+                      <span
+                        style={{
+                          backgroundColor: isEquipmentLimitReached ? '#FEF3F2' : '#EFF8FF',
+                          color: isEquipmentLimitReached ? '#B42318' : '#175CD3',
+                          fontSize: '12px',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontWeight: 600
+                        }}
+                      >
+                        {isEquipmentLimitReached ? 0 : Math.max(0, maxEquipmentCredit - equipmentsData.length)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#344054' }}>
+                      <span>{t.defined_equipments}</span>
+                      <span style={{ backgroundColor: '#ECFDF3', color: '#027A48', fontSize: '12px', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                        {equipmentsData.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 2-Column Equipment Container */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
+                    {/* Left Column: Tanımsız Ekipmanlar veya Kredi Bitti */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {isEquipmentLimitReached ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifySelf: 'center', textAlign: 'center', padding: '32px 16px', border: '1px dashed #FDA29B', borderRadius: '12px', background: '#FFFAFA', minHeight: '200px' }}>
+                          <div style={{ width: '44px', height: '44px', background: '#FEF3F2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D9381E" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          </div>
+                          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#101828', marginBottom: '6px' }}>{t.credit_finished_title}</h3>
+                          <p style={{ fontSize: '12px', color: '#667085', maxWidth: '220px', lineHeight: '1.4', marginBottom: '18px' }}>
+                            {t.credit_finished_sub}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setMaxEquipmentCredit(prev => prev + 20)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', border: '1px solid #D0D5DD', borderRadius: '8px', background: '#FFFFFF', fontSize: '14px', fontWeight: 600, color: '#344054', cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.05)' }}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                            <span>{t.btn_buy}</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ padding: '24px', textAlign: 'center', color: '#667085', fontSize: '13px', background: '#F9FAFB', border: '1px dashed #EAECF0', borderRadius: '8px' }}>
+                          Henüz tanımsız ekipman kalmadı.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column: Tanımlı Ekipmanlar */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {filteredDefinedEquipments.map((item) => (
+                        <div
+                          key={item.id}
+                          className="dept-item-card"
+                          style={{ padding: '8px 12px', border: '1px solid #EAECF0', borderRadius: '8px', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ width: '44px', height: '36px', minWidth: '44px', borderRadius: '6px', overflow: 'hidden', background: '#F9FAFB', border: '1px solid #EAECF0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {item.img || item.photo ? (
+                                <img src={item.img || item.photo} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              ) : (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#101828' }}>{item.name}</div>
+                              <div style={{ fontSize: '12px', color: '#667085' }}>{item.type || 'CNC Torna'}</div>
+                            </div>
+                          </div>
+                          <div className="dept-item-actions">
+                            <button type="button" className="dept-action-btn edit-eq-btn" onClick={() => handleOpenEditEquipmentModal(item)} title="Düzenle">
+                              <EditIcon />
+                            </button>
+                            <button type="button" className="dept-action-btn delete-eq-btn" onClick={() => handleDeleteEquipment(item.id)} title="Sil">
+                              <DeleteIcon />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn-add-new-dept"
+                        onClick={handleOpenAddEquipmentModal}
+                        style={{ marginTop: '4px' }}
+                      >
+                        <span className="plus-sign">+</span><span>{t.modal_equipment_title}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-action-buttons" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  <button type="button" className="btn-step-prev btn-prev" onClick={() => setCurrentStep(6)}>{t.btn_prev}</button>
+                  <button type="button" className="btn-step-next btn-next" onClick={() => setCurrentStep(8)}>{t.btn_next}</button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* ══════════ STEP 8: VARDİYALAR (BOŞ ŞABLON) ══════════ */}
+        {/* ══════════ STEP 8: VARDİYA EKLE (SHIFTS) ══════════ */}
         {currentStep === 8 && (
-          <div className="step-view active" id="step-8"></div>
+          <div className="step-view active" id="step-8">
+            {shiftsData.length === 0 ? (
+              <div className="internal-op-empty-view" id="shiftsEmptyView">
+                <div className="welcome-header internal-op-header">
+                  <h1 className="step-title">{t.step8_title}</h1>
+                  <p className="welcome-subtitle">{t.step8_sub}</p>
+                </div>
+                <div className="add-internal-op-wrapper">
+                  <button type="button" className="btn-add-item" id="btnAddShift" onClick={handleOpenAddShiftModal}>
+                    <span className="plus-sign">+</span>
+                    <span>{t.btn_add}</span>
+                  </button>
+                </div>
+                <div className="form-action-buttons" style={{ marginTop: '40px' }}>
+                  <button type="button" className="btn-step-prev btn-prev" onClick={() => setCurrentStep(7)}>{t.btn_prev}</button>
+                  <button type="button" className="btn-step-next btn-next" onClick={() => setCurrentStep(9)}>{t.btn_next}</button>
+                </div>
+              </div>
+            ) : (
+              <div className="internal-op-list-view" id="shiftsListView" style={{ width: '100%' }}>
+                <div style={{ maxWidth: '620px', margin: '0 auto', background: '#FFFFFF', border: '1px solid #EAECF0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(16,24,40,0.05)' }}>
+                  {/* Header Bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#101828', margin: 0 }}>{t.shifts}</h2>
+                    <span style={{ padding: '4px 12px', borderRadius: '16px', background: '#F4F3FF', color: '#7F56D9', fontSize: '13px', fontWeight: 600 }}>
+                      {shiftsData.length} {t.shift_count_suffix}
+                    </span>
+                  </div>
+
+                  {/* Defined Shifts Cards Container */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                    {shiftsData.map((item) => {
+                      const borderColor = colorHexMap[item.color] || '#7F56D9';
+                      return (
+                        <div
+                          key={item.id}
+                          style={{
+                            padding: '12px 16px 12px 12px',
+                            border: '1px solid #EAECF0',
+                            borderLeft: `4px solid ${borderColor}`,
+                            borderRadius: '8px',
+                            background: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#101828', textAlign: 'left' }}>{item.name}</span>
+                            <span style={{ fontSize: '13px', color: '#667085', marginTop: '2px', textAlign: 'left' }}>{item.startTime} - {item.endTime}</span>
+                          </div>
+                          <div className="dept-item-actions">
+                            <button type="button" className="dept-action-btn edit-shift-btn" onClick={() => handleOpenEditShiftModal(item)} title="Düzenle">
+                              <EditIcon />
+                            </button>
+                            <button type="button" className="dept-action-btn delete-shift-btn" onClick={() => handleDeleteShift(item.id)} title="Sil">
+                              <DeleteIcon />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* + Yeni Vardiya Ekle Bottom Button */}
+                  <button
+                    type="button"
+                    disabled={shiftsData.length >= 3}
+                    onClick={handleOpenAddShiftModal}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #D0D5DD',
+                      borderRadius: '8px',
+                      background: shiftsData.length >= 3 ? '#F9FAFB' : '#FFFFFF',
+                      borderColor: shiftsData.length >= 3 ? '#EAECF0' : '#D0D5DD',
+                      color: shiftsData.length >= 3 ? '#98A2B3' : '#344054',
+                      cursor: shiftsData.length >= 3 ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      boxShadow: '0 1px 2px rgba(16,24,40,0.05)',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>+</span>
+                    <span>{t.btn_add_new_shift}</span>
+                  </button>
+
+                  {/* 24 Saat / 3 Vardiya Sınırı Uyarı Satırı */}
+                  {shiftsData.length >= 3 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px', fontSize: '13px', color: '#475467' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                      <span>{t.shift_limit_warning}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-action-buttons" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '620px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  <button type="button" className="btn-step-prev btn-prev" onClick={() => setCurrentStep(7)}>{t.btn_prev}</button>
+                  <button type="button" className="btn-step-next btn-next" onClick={() => setCurrentStep(9)} style={{ background: '#7F56D9', color: '#FFFFFF' }}>{t.btn_next}</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══════════ STEP 9: KAPANIŞ SAYFASI (KURULUM TAMAMLANDI) ══════════ */}
+        {currentStep === 9 && (
+          <div className="step-view active" id="step-9" style={{ marginTop: '60px' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#101828', marginBottom: '12px' }}>{t.step9_title}</h1>
+              <p style={{ fontSize: '15px', color: '#667085', lineHeight: '1.6', maxWidth: '520px', margin: '0 auto 32px auto' }}>
+                {t.step9_sub}
+              </p>
+              <button
+                type="button"
+                id="btnFinishStart"
+                onClick={() => setCurrentStep(1)}
+                style={{
+                  padding: '12px 36px',
+                  background: '#7F56D9',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  boxShadow: '0 1px 3px rgba(16,24,40,0.1)',
+                  transition: 'background 0.15s'
+                }}
+              >
+                <span>{t.btn_finish_start}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </div>
         )}
 
       </section>
@@ -920,7 +1445,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ DEPARTMENT MODAL ══════════ */}
       {isDeptModalOpen && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsDeptModalOpen(false); }}>
+        <div className="modal-overlay active" id="departmentModal" onClick={(e) => { if (e.target === e.currentTarget) setIsDeptModalOpen(false); }}>
           <div className="modal-card">
             <div className="modal-header">
               <h2 className="modal-title">{editingDeptId ? t.modal_dept_edit_title : t.modal_dept_title}</h2>
@@ -961,7 +1486,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ PERSONNEL MODAL ══════════ */}
       {isPersonModalOpen && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsPersonModalOpen(false); }}>
+        <div className="modal-overlay active" id="personnelModal" onClick={(e) => { if (e.target === e.currentTarget) setIsPersonModalOpen(false); }}>
           <div className="modal-card modal-card-wide">
             <div className="modal-header">
               <h2 className="modal-title">{editingPersonId ? t.modal_personnel_edit_title : t.modal_personnel_title}</h2>
@@ -980,8 +1505,23 @@ export default function RegisterOnboarding() {
                       <div className="form-group" style={{ marginBottom: '20px' }}>
                         <input type="file" ref={personPhotoInputRef} accept="image/*" style={{ display: 'none' }} onChange={handlePersonPhotoUpload} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div className="person-photo-circle" onClick={() => personPhotoInputRef.current?.click()} style={currentUploadedPhotoData ? { border: 'none' } : {}}>
-                            {currentUploadedPhotoData ? <img src={currentUploadedPhotoData} alt="Photo" /> : <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#98A2B3" strokeWidth="2"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>}
+                          <div
+                            className="person-photo-circle"
+                            onClick={() => personPhotoInputRef.current?.click()}
+                            style={currentUploadedPhotoData ? { border: 'none' } : {}}
+                          >
+                            {currentUploadedPhotoData ? (
+                              <img
+                                src={currentUploadedPhotoData}
+                                alt="Photo"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', display: 'block' }}
+                              />
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#98A2B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                <line x1="7" y1="2" x2="7" y2="12" />
+                                <line x1="2" y1="7" x2="12" y2="7" />
+                              </svg>
+                            )}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '15px', fontWeight: 700, color: '#101828', marginBottom: '2px' }}>{t.person_photo}</span>
@@ -1036,9 +1576,13 @@ export default function RegisterOnboarding() {
                     {skillsData.map(skill => (
                       <div key={skill.id} className="skill-item-row">
                         <div className="skill-info"><div className="skill-name">{skill.name}</div><div className="skill-score">{skill.score}</div></div>
-                        <div className="dept-actions-btns">
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleOpenEditSkillModal(skill)}><EditIcon /></button>
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleDeleteSkill(skill.id)}><DeleteIcon /></button>
+                        <div className="dept-item-actions">
+                          <button type="button" className="dept-action-btn edit-skill-btn" onClick={() => handleOpenEditSkillModal(skill)} title="Düzenle">
+                            <EditIcon />
+                          </button>
+                          <button type="button" className="dept-action-btn delete-skill-btn" onClick={() => handleDeleteSkill(skill.id)} title="Sil">
+                            <DeleteIcon />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -1058,9 +1602,13 @@ export default function RegisterOnboarding() {
                     {achievementsData.map(item => (
                       <div key={item.id} className="skill-item-row">
                         <div className="skill-info"><div className="skill-name">{item.title}</div><div className="skill-score">{item.approvedBy}</div></div>
-                        <div className="dept-actions-btns">
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleOpenEditAchieveModal(item)}><EditIcon /></button>
-                          <button type="button" className="dept-action-icon-btn" onClick={() => handleDeleteAchieve(item.id)}><DeleteIcon /></button>
+                        <div className="dept-item-actions">
+                          <button type="button" className="dept-action-btn edit-achieve-btn" onClick={() => handleOpenEditAchieveModal(item)} title="Düzenle">
+                            <EditIcon />
+                          </button>
+                          <button type="button" className="dept-action-btn delete-achieve-btn" onClick={() => handleDeleteAchieve(item.id)} title="Sil">
+                            <DeleteIcon />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -1078,7 +1626,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ SKILL SUB-MODAL ══════════ */}
       {isSkillModalOpen && (
-        <div className="modal-overlay sub-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsSkillModalOpen(false); }}>
+        <div className="modal-overlay active sub-modal-overlay" id="skillModal" style={{ zIndex: 1100 }} onClick={(e) => { if (e.target === e.currentTarget) setIsSkillModalOpen(false); }}>
           <div className="modal-card" style={{ maxWidth: '380px' }}>
             <div className="modal-header">
               <h2 className="modal-title">{editingSkillId ? t.modal_skill_edit_title : t.modal_skill_title}</h2>
@@ -1099,7 +1647,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ ACHIEVEMENT SUB-MODAL ══════════ */}
       {isAchieveModalOpen && (
-        <div className="modal-overlay sub-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsAchieveModalOpen(false); }}>
+        <div className="modal-overlay active sub-modal-overlay" id="achievementModal" style={{ zIndex: 1100 }} onClick={(e) => { if (e.target === e.currentTarget) setIsAchieveModalOpen(false); }}>
           <div className="modal-card" style={{ maxWidth: '580px' }}>
             <div className="modal-header">
               <h2 className="modal-title">{editingAchieveId ? t.modal_achievement_edit_title : t.modal_achievement_title}</h2>
@@ -1130,7 +1678,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ STEP 5: INTERNAL OP MODAL (3 Tabs) ══════════ */}
       {isInternalOpModalOpen && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsInternalOpModalOpen(false); }}>
+        <div className="modal-overlay active" id="internalOpModal" onClick={(e) => { if (e.target === e.currentTarget) setIsInternalOpModalOpen(false); }}>
           <div className="modal-card modal-card-wide">
             <div className="modal-header">
               <h2 className="modal-title">{editingInternalOpId ? t.modal_internal_op_edit_title : t.modal_internal_op_title}</h2>
@@ -1191,9 +1739,17 @@ export default function RegisterOnboarding() {
                         return (
                           <label key={p.id} className="op-manager-card">
                             <input type="checkbox" checked={isChecked} onChange={() => handleToggleOpManager(fullName)} />
-                            <div className="person-avatar-fallback" style={{ width: '32px', height: '32px', minWidth: '32px', borderRadius: '50%', fontSize: '12px' }}>
-                              {((p.firstName[0] || '') + (p.lastName[0] || '')).toUpperCase() || 'P'}
-                            </div>
+                            {p.photo ? (
+                              <img
+                                src={p.photo}
+                                alt="Avatar"
+                                style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+                              />
+                            ) : (
+                              <div className="person-avatar-fallback" style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', fontSize: '13px' }}>
+                                {((p.firstName[0] || '') + (p.lastName[0] || '')).toUpperCase() || 'P'}
+                              </div>
+                            )}
                             <div className="person-info-col">
                               <span style={{ fontSize: '13px', fontWeight: 600, color: '#101828' }}>{fullName}</span>
                               <span style={{ fontSize: '12px', color: '#667085' }}>{p.role || p.dept || 'Staff'}</span>
@@ -1242,7 +1798,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ STEP 6: EXTERNAL OP MODAL (2 Tabs) ══════════ */}
       {isExternalOpModalOpen && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsExternalOpModalOpen(false); }}>
+        <div className="modal-overlay active" id="externalOpModal" onClick={(e) => { if (e.target === e.currentTarget) setIsExternalOpModalOpen(false); }}>
           <div className="modal-card modal-card-wide">
             <div className="modal-header">
               <h2 className="modal-title">{editingExternalOpId ? t.modal_external_op_edit_title : t.modal_external_op_title}</h2>
@@ -1265,7 +1821,12 @@ export default function RegisterOnboarding() {
                       <label className="input-label" style={{ marginBottom: 0 }}>{t.suppliers}</label>
                       <span className="dept-count-badge">{suppliersData.length} adet</span>
                     </div>
-                    <button type="button" className="btn-link-action" onClick={handleOpenAddSupplierModal}>
+                    <button
+                      type="button"
+                      className="btn-link-action"
+                      onClick={handleOpenAddSupplierModal}
+                      style={{ background: 'none', border: 'none', color: '#7F56D9', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                    >
                       <span>+</span><span>{t.btn_add_new_supplier}</span>
                     </button>
                   </div>
@@ -1284,8 +1845,12 @@ export default function RegisterOnboarding() {
                               <span>{sup.name}</span>
                             </label>
                             <div className="supplier-item-actions">
-                              <button type="button" className="supplier-action-btn edit-btn" onClick={() => handleOpenEditSupplierModal(sup)}><EditIcon /></button>
-                              <button type="button" className="supplier-action-btn delete-btn" onClick={() => handleDeleteSupplier(sup.id)}><DeleteIcon /></button>
+                              <button type="button" className="supplier-action-btn edit-btn edit-supplier-btn" onClick={() => handleOpenEditSupplierModal(sup)} title="Düzenle">
+                                <EditIcon />
+                              </button>
+                              <button type="button" className="supplier-action-btn delete-btn delete-supplier-btn" onClick={() => handleDeleteSupplier(sup.id)} title="Sil">
+                                <DeleteIcon />
+                              </button>
                             </div>
                           </div>
                         );
@@ -1313,9 +1878,17 @@ export default function RegisterOnboarding() {
                       return (
                         <label key={p.id} className="op-manager-card">
                           <input type="checkbox" checked={isChecked} onChange={() => handleToggleExtManager(fullName)} />
-                          <div className="person-avatar-fallback" style={{ width: '32px', height: '32px', minWidth: '32px', borderRadius: '50%', fontSize: '12px' }}>
-                            {((p.firstName[0] || '') + (p.lastName[0] || '')).toUpperCase() || 'P'}
-                          </div>
+                          {p.photo ? (
+                            <img
+                              src={p.photo}
+                              alt="Avatar"
+                              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+                            />
+                          ) : (
+                            <div className="person-avatar-fallback" style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', fontSize: '13px' }}>
+                              {((p.firstName[0] || '') + (p.lastName[0] || '')).toUpperCase() || 'P'}
+                            </div>
+                          )}
                           <div className="person-info-col">
                             <span style={{ fontSize: '13px', fontWeight: 600, color: '#101828' }}>{fullName}</span>
                             <span style={{ fontSize: '12px', color: '#667085' }}>{p.role || p.dept || 'Staff'}</span>
@@ -1337,7 +1910,7 @@ export default function RegisterOnboarding() {
 
       {/* ══════════ SUPPLIER MODAL (Nested Sub-Modal) ══════════ */}
       {isSupplierModalOpen && (
-        <div className="modal-overlay sub-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsSupplierModalOpen(false); }}>
+        <div className="modal-overlay active sub-modal-overlay" id="newSupplierModal" style={{ zIndex: 1050 }} onClick={(e) => { if (e.target === e.currentTarget) setIsSupplierModalOpen(false); }}>
           <div className="modal-card" style={{ maxWidth: '440px' }}>
             <div className="modal-header">
               <h2 className="modal-title">{editingSupplierId ? t.modal_supplier_edit_title : t.modal_supplier_title}</h2>
@@ -1364,6 +1937,258 @@ export default function RegisterOnboarding() {
             <div className="modal-footer" style={{ marginTop: '24px' }}>
               <button type="button" className="btn-modal-cancel" onClick={() => setIsSupplierModalOpen(false)}>{t.btn_cancel}</button>
               <button type="button" className="btn-modal-submit" onClick={handleSaveSupplier}>{t.btn_save}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ STEP 7: EQUIPMENT MODAL (2-Column Grid) ══════════ */}
+      {isEquipmentModalOpen && (
+        <div className="modal-overlay active" id="equipmentModal" onClick={(e) => { if (e.target === e.currentTarget) setIsEquipmentModalOpen(false); }}>
+          <div className="modal-card modal-card-wide" style={{ maxWidth: '680px', padding: '24px' }}>
+            <div className="modal-header" style={{ marginBottom: '20px' }}>
+              <h2 className="modal-title">{editingEquipmentId ? t.modal_equipment_edit_title : t.modal_equipment_title}</h2>
+              <button type="button" className="modal-close-btn" onClick={() => setIsEquipmentModalOpen(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-two-column-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+                {/* LEFT COLUMN */}
+                <div className="modal-col" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Photo Upload Box */}
+                  <div className="photo-upload-box-row" style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '4px' }}>
+                    <input type="file" ref={eqPhotoFileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleEqPhotoUpload} />
+                    <div
+                      onClick={() => eqPhotoFileInputRef.current?.click()}
+                      style={{ width: '52px', height: '52px', minWidth: '52px', border: '1px dashed #D0D5DD', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backgroundColor: '#FAFAFA', overflow: 'hidden' }}
+                    >
+                      {currentUploadedEqPhoto ? (
+                        <img src={currentUploadedEqPhoto} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#101828' }}>{t.eq_photo}</div>
+                      <span onClick={() => eqPhotoFileInputRef.current?.click()} style={{ fontSize: '13px', color: '#7F56D9', textDecoration: 'underline', cursor: 'pointer' }}>{t.upload_image}</span>
+                    </div>
+                  </div>
+
+                  <div className="form-group"><label className="input-label">{t.eq_id}</label><input type="text" className="form-input" placeholder={t.eq_id} value={eqForm.id} onChange={(e) => setEqForm(p => ({ ...p, id: e.target.value }))} /></div>
+                  <div className="form-group"><label className="input-label">{t.eq_brand}</label><input type="text" className="form-input" placeholder={t.eq_brand} value={eqForm.brand} onChange={(e) => setEqForm(p => ({ ...p, brand: e.target.value }))} /></div>
+                  <div className="form-group"><label className="input-label">{t.eq_model}</label><input type="text" className="form-input" placeholder={t.eq_model} value={eqForm.model} onChange={(e) => setEqForm(p => ({ ...p, model: e.target.value }))} /></div>
+                  <div className="form-group">
+                    <label className="input-label">{t.eq_operation}</label>
+                    <select className="form-input" value={eqForm.type} onChange={(e) => setEqForm(p => ({ ...p, type: e.target.value }))}>
+                      <option value="">{t.eq_operation_placeholder}</option>
+                      <option value="CNC Torna">CNC Torna</option>
+                      <option value="CNC Freze">CNC Freze</option>
+                      <option value="Kesim">Kesim</option>
+                      <option value="Kaynak">Kaynak</option>
+                      <option value="Montaj">Montaj</option>
+                    </select>
+                  </div>
+                  <div className="form-group"><label className="input-label">{t.eq_mac}</label><input type="text" className="form-input" placeholder={t.eq_mac} value={eqForm.mac} onChange={(e) => setEqForm(p => ({ ...p, mac: e.target.value }))} /></div>
+                  <div className="form-group"><label className="input-label">{t.eq_year}</label><input type="text" className="form-input" placeholder={t.eq_year} value={eqForm.year} onChange={(e) => setEqForm(p => ({ ...p, year: e.target.value }))} /></div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div className="form-group"><label className="input-label">{t.eq_amort}</label><input type="text" className="form-input" value={eqForm.amort} onChange={(e) => setEqForm(p => ({ ...p, amort: e.target.value }))} /></div>
+                    <div className="form-group"><label className="input-label">{t.eq_score}</label><input type="text" className="form-input" value={eqForm.score} onChange={(e) => setEqForm(p => ({ ...p, score: e.target.value }))} /></div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN */}
+                <div className="modal-col" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div className="form-group"><label className="input-label">{t.eq_valuation}</label><input type="text" className="form-input" value={eqForm.valuation} onChange={(e) => setEqForm(p => ({ ...p, valuation: e.target.value }))} /></div>
+                    <div className="form-group"><label className="input-label">{t.eq_min_cost}</label><input type="text" className="form-input" value={eqForm.minCost} onChange={(e) => setEqForm(p => ({ ...p, minCost: e.target.value }))} /></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div className="form-group"><label className="input-label">{t.eq_worker_count}</label><input type="text" className="form-input" value={eqForm.workerCount} onChange={(e) => setEqForm(p => ({ ...p, workerCount: e.target.value }))} /></div>
+                    <div className="form-group"><label className="input-label">{t.eq_order_no}</label><input type="text" className="form-input" value={eqForm.orderNo} onChange={(e) => setEqForm(p => ({ ...p, orderNo: e.target.value }))} /></div>
+                  </div>
+                  <div className="form-group"><label className="input-label">{t.eq_lifespan}</label><input type="text" className="form-input" value={eqForm.lifespan} onChange={(e) => setEqForm(p => ({ ...p, lifespan: e.target.value }))} /></div>
+                  <div className="form-group"><label className="input-label">{t.eq_tolerance}</label><input type="text" className="form-input" value={eqForm.tolerance} onChange={(e) => setEqForm(p => ({ ...p, tolerance: e.target.value }))} /></div>
+
+                  <div className="form-group"><label className="input-label">{t.utilization}</label><div className="kpi-input-group"><span className="kpi-badge">KPI</span><input type="text" className="form-input" value={eqForm.utilization} onChange={(e) => setEqForm(p => ({ ...p, utilization: e.target.value }))} /></div></div>
+                  <div className="form-group"><label className="input-label">{t.measurable}</label><div className="kpi-input-group"><span className="kpi-badge">KPI</span><input type="text" className="form-input" value={eqForm.measurable} onChange={(e) => setEqForm(p => ({ ...p, measurable: e.target.value }))} /></div></div>
+                  <div className="form-group"><label className="input-label">{t.performance}</label><div className="kpi-input-group"><span className="kpi-badge">KPI</span><input type="text" className="form-input" value={eqForm.performance} onChange={(e) => setEqForm(p => ({ ...p, performance: e.target.value }))} /></div></div>
+                  <div className="form-group"><label className="input-label">{t.availability}</label><div className="kpi-input-group"><span className="kpi-badge">KPI</span><input type="text" className="form-input" value={eqForm.availability} onChange={(e) => setEqForm(p => ({ ...p, availability: e.target.value }))} /></div></div>
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
+                <button type="button" className="btn-modal-cancel" onClick={() => setIsEquipmentModalOpen(false)}>{t.btn_cancel}</button>
+                <button type="button" className="btn-modal-submit" onClick={handleSaveEquipment}>{t.btn_save}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ STEP 8: SHIFT MODAL (2 Tabs) ══════════ */}
+      {isShiftModalOpen && (
+        <div className="modal-overlay active" id="shiftModal" onClick={(e) => { if (e.target === e.currentTarget) setIsShiftModalOpen(false); }}>
+          <div className="modal-card modal-card-wide" style={{ maxWidth: '680px', padding: '24px' }}>
+            <div className="modal-header" style={{ marginBottom: '16px' }}>
+              <h2 className="modal-title">{editingShiftId ? t.modal_shift_edit_title : t.modal_shift_title}</h2>
+              <button type="button" className="modal-close-btn" onClick={() => setIsShiftModalOpen(false)}>&times;</button>
+            </div>
+            <div className="modal-tabs">
+              <button type="button" className={`modal-tab-btn ${shiftModalTab === 'info' ? 'active' : ''}`} onClick={() => setShiftModalTab('info')}>{t.tab_shift_info}</button>
+              <button type="button" className={`modal-tab-btn ${shiftModalTab === 'break' ? 'active' : ''}`} onClick={() => setShiftModalTab('break')}>{t.tab_shift_breaks}</button>
+            </div>
+            <div className="modal-body">
+              {/* TAB 1: VARDIYA BILGILERI */}
+              {shiftModalTab === 'info' && (
+                <div className="modal-tab-content active" style={{ width: '100%' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '16px', alignItems: 'start' }}>
+                    {/* LEFT COLUMN */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <div className="form-group"><label className="input-label">{t.shift_name}</label><input type="text" className="form-input" placeholder={t.shift_name} value={shiftForm.name} onChange={(e) => setShiftForm(p => ({ ...p, name: e.target.value }))} /></div>
+                      <div className="form-group"><label className="input-label">{t.shift_start_time}</label><div className="input-with-icon"><CalendarIcon /><input type="text" className="form-input" placeholder="16:34" value={shiftForm.startTime} onChange={(e) => setShiftForm(p => ({ ...p, startTime: e.target.value }))} /></div></div>
+                      <div className="form-group"><label className="input-label">{t.shift_end_time}</label><div className="input-with-icon"><CalendarIcon /><input type="text" className="form-input" placeholder="16:34" value={shiftForm.endTime} onChange={(e) => setShiftForm(p => ({ ...p, endTime: e.target.value }))} /></div></div>
+                      <div className="form-group">
+                        <label className="input-label">{t.shift_manager}</label>
+                        <select className="form-input" value={shiftForm.manager} onChange={(e) => setShiftForm(p => ({ ...p, manager: e.target.value }))}>
+                          <option value="">{t.shift_manager_placeholder}</option>
+                          {personnelData.map(p => {
+                            const fullName = `${p.firstName} ${p.lastName}`.trim();
+                            return <option key={p.id} value={fullName}>{fullName}</option>;
+                          })}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* MIDDLE COLUMN: VARDIYA TEKRARI */}
+                    <div style={{ border: '1px solid #EAECF0', borderRadius: '8px', padding: '14px', background: '#FFFFFF', textAlign: 'left' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#101828', marginBottom: '12px' }}>{t.shift_repeat}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].map(day => (
+                          <label key={day} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#344054', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              style={{ accentColor: '#7F56D9', width: '16px', height: '16px' }}
+                              checked={shiftForm.repeatDays.includes(day)}
+                              onChange={() => handleToggleShiftRepeatDay(day)}
+                            />
+                            <span>{day}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: TAKVIM RENGI */}
+                    <div style={{ border: '1px solid #EAECF0', borderRadius: '8px', padding: '14px', background: '#FFFFFF', textAlign: 'left' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#101828', marginBottom: '12px' }}>{t.shift_calendar_color}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {[
+                          { key: 'mor', label: 'Mor', bg: '#F4F3FF', border: '#7F56D9' },
+                          { key: 'gri', label: 'Gri', bg: '#F2F4F7', border: '#667085' },
+                          { key: 'kırmızı', label: 'Kırmızı', bg: '#FEF3F2', border: '#D9381E' },
+                          { key: 'turuncu', label: 'Turuncu', bg: '#FEF0C7', border: '#F79009' },
+                          { key: 'yeşil', label: 'Yeşil', bg: '#D1FADF', border: '#12B76A' },
+                          { key: 'mavi', label: 'Mavi', bg: '#D1E9FF', border: '#2E90FA' }
+                        ].map(c => (
+                          <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#344054', cursor: 'pointer' }}>
+                            <input
+                              type="radio"
+                              name="shiftCalendarColorRadio"
+                              value={c.key}
+                              checked={shiftForm.color === c.key}
+                              onChange={() => setShiftForm(p => ({ ...p, color: c.key }))}
+                              style={{ accentColor: c.border, width: '16px', height: '16px' }}
+                            />
+                            <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', background: c.bg, border: `1px solid ${c.border}` }}></span>
+                            <span>{c.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
+                    <button type="button" className="btn-modal-cancel" onClick={() => setIsShiftModalOpen(false)}>{t.btn_cancel}</button>
+                    <button type="button" className="btn-modal-submit" onClick={() => setShiftModalTab('break')}>{t.btn_next}</button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: MOLALAR */}
+              {shiftModalTab === 'break' && (
+                <div className="modal-tab-content active" style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#101828', margin: 0 }}>{t.breaks}</h3>
+                      <span style={{ padding: '2px 8px', borderRadius: '12px', background: '#F4F3FF', color: '#7F56D9', fontSize: '12px', fontWeight: 600 }}>
+                        {currentShiftBreaks.length} adet
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleOpenAddBreakModal}
+                      style={{ background: 'none', border: 'none', color: '#7F56D9', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <span style={{ fontSize: '16px' }}>+</span>
+                      <span>{t.btn_add_new_break}</span>
+                    </button>
+                  </div>
+
+                  {/* 2 Kolonlu Mola Listesi Container */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', minHeight: '180px', alignContent: 'start' }}>
+                    {currentShiftBreaks.length === 0 ? (
+                      <div style={{ gridColumn: '1 / -1', padding: '24px', textAlign: 'center', color: '#667085', fontSize: '13px', background: '#F9FAFB', border: '1px dashed #EAECF0', borderRadius: '8px' }}>
+                        Henüz mola tanımlanmadı.
+                      </div>
+                    ) : (
+                      currentShiftBreaks.map(b => (
+                        <div
+                          key={b.id}
+                          style={{ padding: '10px 12px', border: '1px solid #EAECF0', borderRadius: '8px', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                        >
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 600, color: '#101828' }}>{b.name}</div>
+                            <div style={{ fontSize: '12px', color: '#667085' }}>{b.startTime} - {b.endTime}</div>
+                          </div>
+                          <div className="dept-item-actions">
+                            <button type="button" className="dept-action-btn edit-break-btn" onClick={() => handleOpenEditBreakModal(b)} title="Düzenle">
+                              <EditIcon />
+                            </button>
+                            <button type="button" className="dept-action-btn delete-break-btn" onClick={() => handleDeleteBreak(b.id)} title="Sil">
+                              <DeleteIcon />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="modal-footer" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
+                    <button type="button" className="btn-modal-cancel" onClick={() => setShiftModalTab('info')}>{t.btn_prev}</button>
+                    <button type="button" className="btn-modal-submit" onClick={handleSaveShift}>{t.btn_save}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ BREAK SUB-MODAL ══════════ */}
+      {isBreakModalOpen && (
+        <div className="modal-overlay active sub-modal-overlay" id="newBreakModal" style={{ zIndex: 1060 }} onClick={(e) => { if (e.target === e.currentTarget) setIsBreakModalOpen(false); }}>
+          <div className="modal-card" style={{ maxWidth: '400px', padding: '24px' }}>
+            <div className="modal-header" style={{ marginBottom: '16px' }}>
+              <h2 className="modal-title">{editingBreakId ? t.modal_break_edit_title : t.modal_break_title}</h2>
+              <button type="button" className="modal-close-btn" onClick={() => setIsBreakModalOpen(false)}>&times;</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group"><label className="input-label">{t.break_name}</label><input type="text" className="form-input" placeholder={t.break_name} value={breakForm.name} onChange={(e) => setBreakForm(p => ({ ...p, name: e.target.value }))} /></div>
+              <div className="form-group"><label className="input-label">{t.break_start_time}</label><div className="input-with-icon"><CalendarIcon /><input type="text" className="form-input" placeholder="16:34" value={breakForm.startTime} onChange={(e) => setBreakForm(p => ({ ...p, startTime: e.target.value }))} /></div></div>
+              <div className="form-group"><label className="input-label">{t.break_end_time}</label><div className="input-with-icon"><CalendarIcon /><input type="text" className="form-input" placeholder="16:34" value={breakForm.endTime} onChange={(e) => setBreakForm(p => ({ ...p, endTime: e.target.value }))} /></div></div>
+            </div>
+            <div className="modal-footer" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
+              <button type="button" className="btn-modal-cancel" onClick={() => setIsBreakModalOpen(false)}>{t.btn_cancel}</button>
+              <button type="button" className="btn-modal-submit" onClick={handleSaveBreak}>{t.btn_save}</button>
             </div>
           </div>
         </div>

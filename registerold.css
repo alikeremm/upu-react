@@ -30,24 +30,18 @@
     padding: 0;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+body {
     font-family: var(--font-family);
     background-color: var(--color-bg-page);
     color: var(--color-text-main);
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
-}
-
-#root {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
 }
 
 /* --------------------------------------------------------------------------
@@ -56,8 +50,7 @@ html, body {
 .onboarding-wrapper {
     width: 100%;
     max-width: 1440px;
-    height: 100vh;
-    max-height: 100vh;
+    min-height: 100vh;
     margin: 0 auto;
     padding: 24px 32px 0 32px;
     display: flex;
@@ -67,7 +60,6 @@ html, body {
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.03);
     position: relative;
     box-sizing: border-box;
-    overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -952,14 +944,14 @@ html, body {
     background-color: rgba(16, 24, 40, 0.4);
     backdrop-filter: blur(4px);
     z-index: 1000;
-    display: flex !important;
+    display: none;
     align-items: center;
     justify-content: center;
     animation: fadeInModal 0.2s ease forwards;
 }
 
 .modal-overlay.active {
-    display: flex !important;
+    display: flex;
 }
 
 .modal-card {
@@ -1441,37 +1433,6 @@ html, body {
     box-sizing: border-box !important;
 }
 
-/* Person Photo Upload Circle Preview (Strict 48px) */
-.person-photo-circle {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
-    max-width: 48px !important;
-    max-height: 48px !important;
-    border-radius: 50% !important;
-    border: 1.33px dashed #D0D5DD;
-    background-color: #FFFFFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    overflow: hidden !important;
-    transition: border-color 0.15s;
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
-}
-
-.person-photo-circle img {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 50% !important;
-    display: block !important;
-}
-
 .modal-two-column-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1830,75 +1791,6 @@ html, body {
     color: #101828;
 }
 
-/* Fixed uniform height for Internal Op Modal tabs to prevent jumping/resizing */
-#internalOpModal .modal-body {
-    width: 100% !important;
-    height: 380px !important;
-    min-height: 380px !important;
-    max-height: 380px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    box-sizing: border-box !important;
-}
-
-#internalOpModal .modal-tab-content {
-    display: none;
-    height: 100% !important;
-    min-height: 380px !important;
-    max-height: 380px !important;
-    box-sizing: border-box !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-}
-
-#internalOpModal .modal-tab-content.active {
-    display: flex !important;
-}
-
-#internalOpModal .op-managers-grid {
-    height: 230px !important;
-    max-height: 230px !important;
-    overflow-y: auto !important;
-}
-
-#internalOpModal .op-icon-picker-grid {
-    height: 230px !important;
-    max-height: 230px !important;
-    overflow-y: auto !important;
-}
-
-/* Fixed uniform height for External Op Modal tabs */
-#externalOpModal .modal-body {
-    width: 100% !important;
-    height: 380px !important;
-    min-height: 380px !important;
-    max-height: 380px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    box-sizing: border-box !important;
-}
-
-#externalOpModal .modal-tab-content {
-    display: none;
-    height: 100% !important;
-    min-height: 380px !important;
-    max-height: 380px !important;
-    box-sizing: border-box !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-}
-
-#externalOpModal .modal-tab-content.active {
-    display: flex !important;
-}
-
-#externalOpModal .suppliers-grid,
-#externalOpModal .op-managers-grid {
-    height: 230px !important;
-    max-height: 230px !important;
-    overflow-y: auto !important;
-}
-
 /* --------------------------------------------------------------------------
    16. YENİ DIŞ OPERASYON VE TEDARİKÇİ LİSTE MODAL STİLLERİ (Figma Spec)
    -------------------------------------------------------------------------- */
@@ -1914,25 +1806,6 @@ html, body {
     max-height: 220px !important;
     overflow-y: auto !important;
     padding-right: 4px !important;
-}
-
-.btn-link-action {
-    background: none !important;
-    border: none !important;
-    color: #7F56D9 !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 0 !important;
-    transition: color 0.15s ease, opacity 0.15s ease;
-}
-
-.btn-link-action:hover {
-    color: #6941C6 !important;
-    opacity: 0.85;
 }
 
 .supplier-item-row,
