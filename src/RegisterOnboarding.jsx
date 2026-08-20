@@ -208,6 +208,14 @@ export default function RegisterOnboarding() {
 
   const t = translations[language];
 
+  const hasActiveList = (currentStep === 2) ||
+    (currentStep === 3 && departments.length > 0) ||
+    (currentStep === 4 && personnelData.length > 0) ||
+    (currentStep === 5 && internalOpsData.length > 0) ||
+    (currentStep === 6 && externalOpsData.length > 0) ||
+    (currentStep === 7 && equipmentsData.length > 0) ||
+    (currentStep === 8 && shiftsData.length > 0);
+
   useEffect(() => {
     const handleDocumentClick = (e) => {
       if (!e.target.closest('.floating-left-actions')) {
@@ -1260,7 +1268,7 @@ export default function RegisterOnboarding() {
               </div>
             ) : (
               <div className="internal-op-list-view" id="shiftsListView" style={{ width: '100%' }}>
-                <div style={{ maxWidth: '620px', margin: '0 auto', background: '#FFFFFF', border: '1px solid #EAECF0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(16,24,40,0.05)' }}>
+                <div style={{ width: '100%', maxWidth: '688px', margin: '0 auto', background: '#FFFFFF', border: '1px solid #EAECF0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(16,24,40,0.05)', boxSizing: 'border-box' }}>
                   {/* Header Bar */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#101828', margin: 0 }}>{t.shifts}</h2>
@@ -1344,7 +1352,7 @@ export default function RegisterOnboarding() {
                   )}
                 </div>
 
-                <div className="form-action-buttons" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '620px', marginLeft: 'auto', marginRight: 'auto' }}>
+                <div className="form-action-buttons" style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', maxWidth: '688px', marginLeft: 'auto', marginRight: 'auto', boxSizing: 'border-box' }}>
                   <button type="button" className="btn-step-prev btn-prev" onClick={() => setCurrentStep(7)}>{t.btn_prev}</button>
                   <button type="button" className="btn-step-next btn-next" onClick={() => setCurrentStep(9)} style={{ background: '#7F56D9', color: '#FFFFFF' }}>{t.btn_next}</button>
                 </div>
@@ -1439,7 +1447,7 @@ export default function RegisterOnboarding() {
           src={factoryIllustration}
           alt="Factory Illustration"
           className="factory-illustration-img"
-          style={{ opacity: currentStep === 2 ? 0.3 : 1 }}
+          style={{ opacity: hasActiveList ? 0.3 : 1 }}
         />
       </div>
 
