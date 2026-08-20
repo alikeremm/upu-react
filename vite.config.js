@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 
-export default defineConfig({
-  base: './',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/upu-react/' : '/',
   plugins: [
     react(),
     {
@@ -51,4 +51,4 @@ export default defineConfig({
       interval: 100,
     },
   },
-});
+}));
